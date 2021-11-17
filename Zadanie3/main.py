@@ -55,7 +55,39 @@ def hill_climbing(town_map, iterations):
             return current_best
 
 
+def tabu_search(town_map, iterations, tabu_limit):
+    current_best = town_map
+    tabu = list()
+    tabu_costs = list()
+    while True:
+        permutations = list()
+        costs = list()
+        current_cost = calculate_total_cost(current_best)
+        for i in range(0, iterations):
+            permutations.append(shuffle_towns(current_best))
+            costs.append(calculate_total_cost(permutations[-1]))
+        next_best = min(costs)
+        if len(tabu) == tabu_limit:
+            tabu.pop(0)
+            tabu_costs.pop(0)
+        tabu.append(permutations[costs.index(next_best)])
+        tabu_costs.append(next_best)
+        permutations.pop(costs.index(next_best))
+        costs.pop(costs.index(next_best))
+        next_best = min(costs)
+        if next_best < current_cost:
+            current_best = permutations[costs.index(next_best)]
+        else:
+            tabu_best = min(tabu_costs)
+            if tabu_best < current_cost:
+                current_best = tabu[tabu_costs.index(tabu_best)]
+            else:
+                return current_best
+
+
 t_map = create_map(200, 200, 20)
 print(t_map, "\nStart:", calculate_total_cost(t_map))
-t_map = hill_climbing(t_map, 20)
-print(t_map, "\nEnd:", calculate_total_cost(t_map))
+hill_map = hill_climbing(t_map, 20)
+print(hill_map, "\nHill End:", calculate_total_cost(hill_map))
+tabu_map = tabu_search(t_map, 20, 5)
+print(tabu_map, "\nTabu End:", calculate_total_cost(tabu_map))
