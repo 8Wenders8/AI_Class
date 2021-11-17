@@ -4,15 +4,22 @@ import math
 
 
 def create_towns(map_x, map_y, count):
-    return {i: [rand.randint(0, map_x - 1), rand.randint(0, map_y - 1)] for i in range(count)}
+    return [[rand.randint(0, map_x - 1), rand.randint(0, map_y - 1), i] for i in range(count)]
 
 
-def swap(a, b):
+def swap(town_map, a, b):
+    return town_map
+
+
+def shuffle_towns(town_map, swaps, iterate):
     pass
 
 
-def shuffle_towns(map, swaps, iterate):
-    pass
+def random_starting_point(town_map):
+    start = rand.randint(0, len(town_map))
+    town_map = swap(town_map, start, 0)
+    town_map.append(town_map[start])
+    return town_map
 
 
 def calculate_path(point_a, point_b):
@@ -21,9 +28,13 @@ def calculate_path(point_a, point_b):
     return math.sqrt(x + y)
 
 
-def calculate_total_cost(map):
-    pass
+def calculate_total_cost(town_map):
+    total_cost = 0
+    for i in range(len(town_map)):
+        pass
+        # total_cost += calculate_path(town_map[key], town_map[i+1])
+    return total_cost
 
 
 # print(create_towns(200, 200, 20))
-print(calculate_path([0, 0], [1, 1]))
+print(calculate_path([0, 1], [3, 0]))
