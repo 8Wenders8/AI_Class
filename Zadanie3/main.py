@@ -24,7 +24,7 @@ def shuffle_towns(town_map):
     point_a, point_b = rand.randint(1, count), rand.randint(1, count)
     while point_a == point_b:
         point_b = rand.randint(1, count)
-    return swap(town_map, point_a, point_b)
+    return swap([row[:] for row in town_map], point_a, point_b)
 
 
 def calculate_path(point_a, point_b):
@@ -49,16 +49,10 @@ def hill_climbing(town_map, iterations):
             permutations.append(shuffle_towns(current_best))
             costs.append(calculate_total_cost(permutations[-1]))
         next_best = min(costs)
-        print("Best from generated pool:", next_best, "\nBest current:", calculate_total_cost(current_best))
         if calculate_total_cost(current_best) > next_best:
             current_best = permutations[costs.index(next_best)]
-            print("Best new current:", calculate_total_cost(current_best))
-
         else:
             return current_best
-
-
-
 
 
 t_map = create_map(200, 200, 20)
