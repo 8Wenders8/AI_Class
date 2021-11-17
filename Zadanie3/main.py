@@ -3,23 +3,27 @@ import time
 import math
 
 
-def create_towns(map_x, map_y, count):
-    return [[rand.randint(0, map_x - 1), rand.randint(0, map_y - 1), i] for i in range(count)]
+def create_map(map_x, map_y, count):
+    return shuffle_map([[rand.randint(0, map_x - 1), rand.randint(0, map_y - 1), i] for i in range(count + 1)])
+
+
+def shuffle_map(town_map):
+    town_map[-1].pop()
+    rand.shuffle(town_map)
+    town_map.append(town_map[0])
+    return town_map
 
 
 def swap(town_map, a, b):
+    town_map[a], town_map[b] = town_map[b], town_map[a]
     return town_map
 
 
-def shuffle_towns(town_map, swaps, iterate):
-    pass
-
-
-def random_starting_point(town_map):
-    start = rand.randint(0, len(town_map))
-    town_map = swap(town_map, start, 0)
-    town_map.append(town_map[start])
-    return town_map
+def shuffle_towns(town_map, count):
+    point_a, point_b = rand.randint(1, count), rand.randint(1, count)
+    while point_a == point_b:
+        point_b = rand.randint(1, count)
+    return swap(town_map, point_a, point_b)
 
 
 def calculate_path(point_a, point_b):
@@ -30,11 +34,11 @@ def calculate_path(point_a, point_b):
 
 def calculate_total_cost(town_map):
     total_cost = 0
-    for i in range(len(town_map)):
-        pass
-        # total_cost += calculate_path(town_map[key], town_map[i+1])
+    for i in range(len(town_map) - 1):
+        total_cost += calculate_path(town_map[i], town_map[i + 1])
     return total_cost
 
 
-# print(create_towns(200, 200, 20))
-print(calculate_path([0, 1], [3, 0]))
+t_map = create_map(200, 200, 20)
+print(t_map)
+print(calculate_total_cost(t_map))
