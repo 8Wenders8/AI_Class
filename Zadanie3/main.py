@@ -1,16 +1,10 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+import random as rand
+import time
+import math
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+def create_towns(map_x, map_y, count):
+    return {i: [rand.randint(0, map_x - 1), rand.randint(0, map_y - 1)] for i in range(count)}
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
+print(create_towns(200, 200, 20))
