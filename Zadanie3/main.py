@@ -5,13 +5,13 @@ import math
 
 
 def create_map(map_x, map_y, count):
-    return shuffle_map([[rand.randint(0, map_x - 1), rand.randint(0, map_y - 1), i] for i in range(count)])
+    return shuffle_map([[rand.randint(0, map_x - 1), rand.randint(0, map_y - 1), i] for i in range(count + 1)])
 
 
 def shuffle_map(town_map):
-    town_map.pop(-1)
-    rand.shuffle(town_map)
-    town_map.append(town_map[0])
+    town_map.pop(-1)  # Remove the last generated town so we can put the starting one there
+    rand.shuffle(town_map)  # Randomly shuffle the whole map
+    town_map.append(town_map[0])  # Add the starting town to the end
     return town_map
 
 
@@ -21,17 +21,17 @@ def swap(town_map, a, b):
 
 
 def shuffle_towns(town_map):
-    count = len(town_map) - 2
+    count = len(town_map) - 2  # We don't want to shuffle starting and ending towns
     point_a, point_b = rand.randint(1, count), rand.randint(1, count)
-    while point_a == point_b:
+    while point_a == point_b:  # Ensure the random towns aren't the same
         point_b = rand.randint(1, count)
-    return swap([row[:] for row in town_map], point_a, point_b)
+    return swap([row[:] for row in town_map], point_a, point_b)  # Copy town map by string slicing and pass it to swap
 
 
 def calculate_path(point_a, point_b):
-    x = math.pow(abs(point_a[0] - point_b[0]), 2)
-    y = math.pow(abs(point_a[1] - point_b[1]), 2)
-    return math.sqrt(x + y)
+    x = math.pow(abs(point_a[0] - point_b[0]), 2)  # Get the power of 2 of x difference
+    y = math.pow(abs(point_a[1] - point_b[1]), 2)  # Get the power of 2 of y difference
+    return math.sqrt(x + y)  # Distance between two points by pythagorean theorem
 
 
 def calculate_total_cost(town_map):
@@ -49,9 +49,9 @@ def hill_climbing(town_map, perm_count):
             shuffled = shuffle_towns(current[1])
             permutations.put(((calculate_total_cost(shuffled)), shuffled))
         next_best = permutations.get()
-        if next_best[0] < current[0]:
+        if next_best[0] < current[0]:  # If a better path was found, continue generating with it
             current = [next_best[0], next_best[1]]
-        else:
+        else:  # If not, return the current best path ( local maximum )
             return current
 
 
@@ -90,12 +90,11 @@ def print_map(town_map):
         print(str(item[2]) + ':'.ljust(3) + str(item[0:2]).strip('[]').ljust(12), end='')
         if enum and enum % 10 == 0:
             print("")
-    print("\n")
 
 
 t_map = create_map(200, 200, 20)
 print_map(t_map)
-print("Start sequence:", sequence(t_map), "\nStart cost:", "{:.2f}".format(calculate_total_cost(t_map)))
+print("\nStart sequence:", sequence(t_map), "\nStart cost:", "{:.2f}".format(calculate_total_cost(t_map)))
 hill_result = hill_climbing(t_map, 20)
 print("\nHill sequence:", sequence(hill_result[1]), "\nHill cost:", "{:.2f}".format(hill_result[0]))
 tabu_result = tabu_search(t_map, 20, 15, 10000, 20)
