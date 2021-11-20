@@ -81,10 +81,6 @@ def tabu_search(town_map, perm_count, tabu_limit, iterations=100, time_limit=15)
     return best
 
 
-def is_accepted(cost_diff, temp):
-    return rand.uniform(0, 1) < math.exp((0 - abs(cost_diff)) / temp)
-
-
 def simulated_annealing(town_map, perm_count, initial_temp, alpha):
     temp = initial_temp
     best, current = [distance_path(town_map), town_map], [distance_path(town_map), town_map]
