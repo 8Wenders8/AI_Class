@@ -41,42 +41,43 @@ def calculate_total_cost(town_map):
     return total_cost
 
 
-def hill_climbing(town_map, iterations):
-    current_best = town_map
-    while True:
-        permutations = list()
-        costs = list()
-        for i in range(0, iterations):
-            permutations.append(shuffle_towns(current_best))
-            costs.append(calculate_total_cost(permutations[-1]))
-        next_best = min(costs)
-        if calculate_total_cost(current_best) > next_best:
-            current_best = permutations[costs.index(next_best)]
-        else:
-            return current_best
-
-
-def tabu_search(town_map, perm_count, tabu_limit, iterations=1000, time_limit=15):
-    timeout = time.time() + time_limit
-    counter = 0
-    tabu = queue.Queue(tabu_limit)
+def hill_climbing(town_map, perm_count):
     current = [calculate_total_cost(town_map), town_map]
-    best = [calculate_total_cost(town_map), town_map]
-    while time.time() < timeout and counter < iterations:
+    while True:
         permutations = queue.PriorityQueue()
         for i in range(0, perm_count):
             shuffled = shuffle_towns(current[1])
             permutations.put(((calculate_total_cost(shuffled)), shuffled))
-        counter += perm_count
         next_best = permutations.get()
+        if next_best[0] < current[0]:
+            current = [next_best[0], next_best[1]]
+        else:
+            return current
+
+
+def tabu_search(town_map, perm_count, tabu_limit, iterations=1000, time_limit=15):
+    counter, timeout = 0, time.time() + time_limit  # When to end limitation counters
+    tabu_list = queue.Queue(tabu_limit)  # FIFO Queue represented as a Tabu list
+    best, current = [calculate_total_cost(town_map), town_map], [calculate_total_cost(town_map), town_map]
+    while time.time() < timeout and counter < iterations:
+        permutations = queue.PriorityQueue()  # Path with lowest cost is always on the top
+        for i in range(0, perm_count):
+            shuffled = shuffle_towns(current[1])  # Randomly change two towns in path
+            permutations.put(((calculate_total_cost(shuffled)), shuffled))  # Add it to the queue, with it's cost
+        counter += perm_count
+        next_best = permutations.get()  # Best path from generated pool
         if next_best[0] < best[0]:
             best = [next_best[0], next_best[1]]
-        if current[0] < next_best[0] or (current[0], current[1]) in list(tabu.queue):
-            if tabu.full():
-                tabu.get()
-            tabu.put((current[0], current[1]))
-        current = [next_best[0], next_best[1]]
+        if current[0] < next_best[0] or (current[0], current[1]) in list(tabu_list.queue):
+            if tabu_list.full():
+                tabu_list.get()  # If tabu list is full, throw the first out
+            tabu_list.put((current[0], current[1]))  # Add the local best into the tabu list
+        current = [next_best[0], next_best[1]]  # Continue generating with the second best
     return best
+
+
+def simulated_annealing(town_map):
+    pass
 
 
 def sequence(town_map):
@@ -87,7 +88,7 @@ def print_map(town_map):
     print("Map:   id: x, y")
     for enum, item in enumerate(town_map):
         print(str(item[2]) + ':'.ljust(3) + str(item[0:2]).strip('[]').ljust(12), end='')
-        if not enum == 0 and not enum % 10:
+        if enum and enum % 10 == 0:
             print("")
     print("\n")
 
