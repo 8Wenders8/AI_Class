@@ -2,7 +2,7 @@
 # |  \/  \ \   / /   Matej Volansky
 # | |\/| |\ \ / /    AIS ID: 103180
 # | |  | | \ V /     UI Zadanie.3: TSP - Hill climbing, Tabu search, Simulated annealing
-# |_|  |_|  \_/
+# |_|  |_|  \_/      main.py
 # -----------------------------------------------------------------
 import random as rand
 import queue
@@ -108,18 +108,3 @@ def print_map(town_map):
         print(str(item[2]) + ':'.ljust(3) + str(item[0:2]).strip('[]').ljust(12), end='')
         if enum and enum % 10 == 0:
             print("")
-
-
-t_map = create_map(200, 200, 20)
-print_map(t_map)
-print("\nStart sequence:", sequence(t_map), "\nStart cost:", "{:.2f}".format(distance_path(t_map)))
-hill_result = hill_climbing(t_map, 20)
-print("\nHill sequence:", sequence(hill_result[1]), "\nHill cost:", "{:.2f}".format(hill_result[0]))
-start = time.time()
-tabu_result = tabu_search(t_map, 20, 50, 500, 20)
-print("\nEnd tabu time:", time.time() - start)
-print("Tabu sequence:", sequence(tabu_result[1]), "\nTabu cost:", "{:.2f}".format(tabu_result[0]))
-start = time.time()
-sa_result = simulated_annealing(t_map, 20, 100, 0.1)
-print("\nEnd SA time:", time.time() - start)
-print("SA sequence:", sequence(sa_result[1]), "\nSA cost:", "{:.2f}".format(sa_result[0]))
