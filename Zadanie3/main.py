@@ -59,7 +59,7 @@ def hill_climbing(town_map, iterations):
 def tabu_search(town_map, perm_count, tabu_limit, iterations=1000, time_limit=15):
     timeout = time.time() + time_limit
     counter = 0
-    tabu = queue.LifoQueue(tabu_limit)
+    tabu = queue.Queue(tabu_limit)
     current = [calculate_total_cost(town_map), town_map]
     best = [calculate_total_cost(town_map), town_map]
     while time.time() < timeout and counter < iterations:
@@ -71,21 +71,31 @@ def tabu_search(town_map, perm_count, tabu_limit, iterations=1000, time_limit=15
         next_best = permutations.get()
         if next_best[0] < best[0]:
             best = [next_best[0], next_best[1]]
-        if current[0] > next_best[0] and (current[0], current[1]) not in list(tabu.queue):
-            current = [next_best[0], next_best[1]]
-        else:
-            tabu.put((current_cost, current_best))
-            current_cost, current_best = next_best[0], next_best[1]
+        if current[0] < next_best[0] or (current[0], current[1]) in list(tabu.queue):
+            if tabu.full():
+                tabu.get()
+            tabu.put((current[0], current[1]))
+        current = [next_best[0], next_best[1]]
     return best
 
 
 def sequence(town_map):
-    return [town_map[i][2] for i in range(len(town_map))]
+    return str([town_map[i][2] for i in range(len(town_map))]).strip('[]')
+
+
+def print_map(town_map):
+    print("Map:   id: x, y")
+    for enum, item in enumerate(town_map):
+        print(str(item[2]) + ':'.ljust(3) + str(item[0:2]).strip('[]').ljust(12), end='')
+        if not enum == 0 and not enum % 10:
+            print("")
+    print("\n")
 
 
 t_map = create_map(200, 200, 20)
-print(t_map, "\nStart:", calculate_total_cost(t_map))
-# hill_map = hill_climbing(t_map, 20)
-# print(sequence(hill_map), "\nHill End:", calculate_total_cost(hill_map))
-tabu_map = tabu_search(t_map, 6, 10)
-print(sequence(tabu_map), "\nTabu End:", calculate_total_cost(tabu_map))
+print_map(t_map)
+print("Start sequence:", sequence(t_map), "\nStart cost:", "{:.2f}".format(calculate_total_cost(t_map)))
+hill_map = hill_climbing(t_map, 20)
+print("\nHill sequence:", sequence(hill_map), "\nHill cost:", "{:.2f}".format(calculate_total_cost(hill_map)))
+tabu_result = tabu_search(t_map, 20, 15, 10000, 20)
+print("\nTabu sequence:", sequence(tabu_result[1]), "\nTabu cost:", "{:.2f}".format(tabu_result[0]))
