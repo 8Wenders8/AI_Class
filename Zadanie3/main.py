@@ -11,11 +11,10 @@ import math
 
 
 def create_map(map_x, map_y, count):
-    return shuffle_map([[rand.randint(0, map_x - 1), rand.randint(0, map_y - 1), i] for i in range(count + 1)])
+    return shuffle_map([[rand.randint(0, map_x - 1), rand.randint(0, map_y - 1), i] for i in range(count)])
 
 
 def shuffle_map(town_map):
-    town_map.pop(-1)  # Remove the last generated town so we can put the starting one there
     rand.shuffle(town_map)  # Randomly shuffle the whole map
     town_map.append(town_map[0])  # Add the starting town to the end
     return town_map
