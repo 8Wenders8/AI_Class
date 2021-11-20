@@ -1,3 +1,9 @@
+#  __  ____     __
+# |  \/  \ \   / /   Matej Volansky
+# | |\/| |\ \ / /    AIS ID: 103180
+# | |  | | \ V /     UI Zadanie.3: TSP - Hill climbing, Tabu search, Simulated annealing
+# |_|  |_|  \_/
+# -----------------------------------------------------------------
 import random as rand
 import queue
 import time
