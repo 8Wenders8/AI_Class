@@ -8,6 +8,7 @@
 import matplotlib.pyplot as plt
 import time
 import main as my
+from numpy import arange
 
 
 def save_map_graphs(data, x, y, towns):
@@ -31,14 +32,12 @@ def save_map_graphs(data, x, y, towns):
     plt.show()
 
 
-def save_time_graph(data_x, data_y, title, x_label, x_lim, data_a=None, data_b=None):
-    plt.plot(data_x, data_y)
-    if data_a is not None and data_b is not None:
-        plt.plot(data_a, data_b)
-    plt.xlabel(x_label)
-    plt.xlim(x_lim)
-    plt.ylabel('Time in ms')
-    plt.title(title)
+def save_time_graph(data_x, data_y, title, x_label, y_label, x_lim, x_invert=False):
+    fig, ax = plt.subplots(1, 1)
+    ax.plot(data_x, data_y)
+    ax.set(xlabel=x_label, xlim=x_lim, title=title, ylabel=y_label)
+    if x_invert:
+        ax.invert_xaxis()
     plt.savefig(title.replace(' ', '_'), bbox_inches='tight', dpi=120)
     plt.show()
 
@@ -67,7 +66,7 @@ def map_input():
     return args
 
 
-def tabu_input():
+def pool_input():
     print("Enter min, max and step: ", end='')
     args = input().replace(',', ' ').split()
     args = [int(args[i]) for i in range(3)]
@@ -82,8 +81,8 @@ def hill_test():
     print("Enter x, y, towns: ", end='')
     args = input().replace(',', ' ').split()
     args = [int(args[i]) for i in range(len(args))]
-    args.extend(tabu_input())
-    pool = range(args[3], args[4], args[5])
+    args.extend(pool_input())
+    pool = range(args[3], args[4] + 1, args[5])
     total_time, result = list(), list()
     testing_map = my.create_map(args[0], args[1], args[2])
     for i in pool:
@@ -102,11 +101,11 @@ def tabu_test_time_tabu_list():
     data = list()
     print("Tabu list size tester")
     map_args = map_input()
-    args = tabu_input()
+    args = pool_input()
     print("Enter tabu iterations limit: ", end='')
     iterations = input()
     args.append(int(iterations))
-    pool = range(args[0], args[1], args[2])
+    pool = range(args[0], args[1] + 1, args[2])
     testing_map = my.create_map(map_args[0], map_args[1], map_args[2])
     for i in pool:
         average_time, average_result = 0, 0
@@ -115,13 +114,13 @@ def tabu_test_time_tabu_list():
             my.tabu_search(testing_map, map_args[3], i)
             average_time += (time.time() - timer_zero) * 1000
         data.append(average_time / args[3])
-    save_time_graph(pool, data, 'Tabu list time test', 'Tabu list size', [args[0], args[1]])
+    save_time_graph(pool, data, 'Tabu list time test', 'Tabu list size', 'Time in ms', [args[0], args[1]])
 
 
 def tabu_test_time_iterations():
     print("Tabu iterations tester")
     map_args = map_input()
-    args = tabu_input()
+    args = pool_input()
     print("Enter tabu list size: ", end='')
     tabu_limit = input()
     args.append(int(tabu_limit))
@@ -138,6 +137,46 @@ def tabu_test_time_iterations():
         total_time.append(average_time / args[3])
     two_graphs([pool, total_time, result], [args[0], args[1]], 'Iterations of generating neighbours', 'Time in ms', 'Final result',
                'Tabu iteration time', 'Tabu iteration results')
+
+
+def sa_temp_test():
+    print("Simulated annealing temperature tester")
+    map_args = map_input()
+    print("Enter initial temperature ( Less or equal to 100 ): ", end='')
+    temperature = input()
+    temperature = int(temperature)
+    print("Enter alpha: ", end='')
+    alpha = input()
+    alpha = float(alpha)
+    testing_map = my.create_map(map_args[0], map_args[1], map_args[2])
+    data = my.simulated_annealing(testing_map, map_args[3], temperature, alpha)
+    save_time_graph(data[3], data[2], 'Simulated annealing temperature test', 'Temperature', 'Current cost', [0, temperature], True)
+
+
+def sa_alpha_test():
+    print("Simulated annealing alpha tester")
+    map_args = map_input()
+    print("Enter min, max and step: ", end='')
+    args = input().replace(',', ' ').split()
+    args = [float(args[i]) for i in range(3)]
+    print("Enter num of tests to average: ", end='')
+    average = input()
+    print("Enter initial temperature ( Less or equal to 100 ): ", end='')
+    temperature = input()
+    temperature = int(temperature)
+    total_time, result = list(), list()
+    testing_map = my.create_map(map_args[0], map_args[1], map_args[2])
+    pool = arange(args[0], args[1], args[2])
+    for i in pool:
+        average_time, average_result = 0, 0
+        for j in range(int(average)):
+            timer_zero = time.time()
+            average_result += my.simulated_annealing(testing_map, map_args[3], temperature, i)[0]
+            average_time += (time.time() - timer_zero) * 1000
+        result.append((float(average_result) / float(1000)) / float(average))
+        total_time.append(float(average_time) / float(average))
+    two_graphs([pool, total_time, result], [args[0], args[1]], 'Alpha', 'Time in ms', 'Final result',
+               'Simulated annealing alpha time', 'Simulated annealing alpha results')
 
 
 def map_test():
@@ -174,7 +213,7 @@ def map_test():
 def tabu_test():
     while True:
         print(
-            "\nTabu tester\nlist - tabu list time test\niter - tabu iteration time test\nback - to return to main tester\nPlease select an option: ",
+            "\nTabu Search tester\nlist - tabu list time test\niter - tabu iteration time test\nback - to return to main tester\nPlease select an option: ",
             end='')
         option = input()
         print("")
@@ -182,6 +221,21 @@ def tabu_test():
             tabu_test_time_tabu_list()
         elif "iter" in option:
             tabu_test_time_iterations()
+        elif "back" in option:
+            return
+
+
+def sa_test():
+    while True:
+        print(
+            "\nSimulated annealing tester\ntemp - sa temperature test\nalpha - sa alpha test\nback - to return to main tester\nPlease select an option: ",
+            end='')
+        option = input()
+        print("")
+        if "temp" in option:
+            sa_temp_test()
+        elif "alpha" in option:
+            sa_alpha_test()
         elif "back" in option:
             return
 
@@ -200,7 +254,7 @@ def tester():
         elif "tabu" in option:
             tabu_test()
         elif "sa" in option:
-            pass
+            sa_test()
         elif "exit" in option:
             break
 

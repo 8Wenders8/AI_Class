@@ -84,6 +84,7 @@ def tabu_search(town_map, perm_count, tabu_limit, iterations=100, time_limit=15)
 def simulated_annealing(town_map, perm_count, initial_temp, alpha):
     temp = initial_temp
     best, current = [distance_path(town_map), town_map], [distance_path(town_map), town_map]
+    tester = [[current[0]], [temp]]
     while temp > 0.0:
         choices = neighbours(current[1], perm_count)
         next_best = choices.get()
@@ -91,11 +92,13 @@ def simulated_annealing(town_map, perm_count, initial_temp, alpha):
             best = [next_best[0], next_best[1]]
         while next_best[0] >= current[0] and rand.uniform(0, 1) > (temp/100):
             if choices.empty():
-                return best
+                return [best[0], best[1], tester[0], tester[1]]
             next_best = choices.get()
         current = [next_best[0], next_best[1]]
         temp -= alpha
-    return best
+        tester[0].append(current[0])
+        tester[1].append(temp)
+    return [best[0], best[1], tester[0], tester[1]]
 
 
 def sequence(town_map):
