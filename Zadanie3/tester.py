@@ -9,89 +9,135 @@ import matplotlib.pyplot as plt
 import time
 import main as my
 
-# What do I need to test?:
-#       - create graphs here
-#       - create TSP maps
-#       - test times, SA temperature, maybe results, maybe tabu something
-
 
 def save_map_graphs(data, x, y, towns):
     data_x, data_y = list(), list()
     title = ['Start', 'Hill Climbing', 'Tabu Search', 'Simulated Annealing']
-
     for i in range(4):
         data_x.append([data[i][j][0] for j in range(towns)])
         data_y.append([data[i][j][1] for j in range(towns)])
     data_cost = [data[j] for j in range(4, 8)]
+    data_time = [data[j] for j in range(8, 12)]
 
     fig, axs = plt.subplots(2, 2)
-    print(data_cost)
     for enum, ax in enumerate(axs.flat):
         ax.plot(data_x[enum], data_y[enum], 'ro', data_x[enum], data_y[enum], 'k')
-        ax.set(xlim=[0, x], ylim=[0, y], title=title[enum], xlabel='Cost: ' + '{:.2f}'.format(data_cost[enum]))
-
+        ax.set(xlim=[0, x], ylim=[0, y], title=title[enum],
+               xlabel='Cost: ' + '{:.2f}'.format(data_cost[enum]) + ', Time: ' + '{:.2f}'.format(data_time[enum]*1000) + ' ms')
     fig.tight_layout(pad=0.5)
     fig.set_size_inches(8, 6.4)
     plt.savefig('map_result.png', bbox_inches='tight', dpi=120)
     plt.show()
 
 
-def save_time_graph(data_x, data_y, title, x_label, x_lim):
+def save_time_graph(data_x, data_y, title, x_label, x_lim, data_a=None, data_b=None):
     plt.plot(data_x, data_y)
+    if data_a is not None and data_b is not None:
+        plt.plot(data_a, data_b)
     plt.xlabel(x_label)
     plt.xlim(x_lim)
     plt.ylabel('Time in ms')
     plt.title(title)
-    plt.savefig(title.strip(' '), bbox_inches='tight', dpi=120)
+    plt.savefig(title.replace(' ', '_'), bbox_inches='tight', dpi=120)
     plt.show()
 
 
-def tabu_test_time_tabu_list(tabu_min, tabu_max, tabu_iter, test_iter=20):
+def tabu_test_time_tabu_list(tabu_min, tabu_max, tabu_iter, test_iter=5):
     data = list()
     for i in range(tabu_min, tabu_max, tabu_iter):
         testing_map = my.create_map(1000, 1000, 100)
         average_time = 0
         for j in range(test_iter):
             timer_zero = time.time()
-            my.tabu_search(testing_map, 20, i)
+            my.tabu_search(testing_map, 100, i)
             average_time += (time.time() - timer_zero) * 1000
-        data.append(average_time/test_iter)
-    print(data)
-    return data
+        data.append(average_time / test_iter)
+    save_time_graph(range(tabu_min, tabu_max, tabu_iter), data, 'Tabu list time test',
+                    'Tabu list size', [tabu_min, tabu_max])
 
 
-def tabu_test(tabu_min, tabu_max, tabu_iter, x=200, y=200, towns=20, perm_count=20, iterations=100, time_limit=15):
-    # Time tabu list test
-    save_time_graph(range(tabu_min, tabu_max, tabu_iter), tabu_test_time_tabu_list(tabu_min, tabu_max, tabu_iter)
-                    , 'Tabu list time test', 'Tabu list size', [tabu_min, tabu_max])
+def tabu_test_time_iterations(iter_min, iter_max, iter_i, test_iter=5):
+    total_time, result = list(), list()
+    testing_map = my.create_map(200, 200, 20)
+    for i in range(iter_min, iter_max, iter_i):
+        average_time, average_result = 0, 0
+        for j in range(test_iter):
+            timer_zero = time.time()
+            average_result += my.tabu_search(testing_map, 20, 10, i, time_limit=30)[0]
+            average_time += (time.time() - timer_zero) * 1000
+        result.append((average_result / 1000) / test_iter)
+        total_time.append(average_time / test_iter)
+
+    fig, axs = plt.subplots(2, 1)
+    axs[0].plot(range(iter_min, iter_max, iter_i), total_time)
+    axs[0].set(xlim=[iter_min, iter_max], title='Tabu iteration times',
+               xlabel='Iterations of generating neighbours', ylabel='Time in ms')
+    axs[1].plot(range(iter_min, iter_max, iter_i), result)
+    axs[1].set(xlim=[iter_min, iter_max], title='Tabu iteration results',
+               xlabel='Iterations of generating neighbours', ylabel='Final result')
+    fig.tight_layout(pad=0.5)
+    fig.set_size_inches(8, 6.4)
+    plt.savefig('tabu_iterations_time.png', bbox_inches='tight', dpi=120)
+    plt.show()
 
 
-plot_data = list()
-start_map = my.create_map(200, 200, 20)
-start_cost = my.distance_path(start_map)
-my.print_map(start_map)
-print("\nStart sequence:", my.sequence(start_map), "\nStart cost:", "{:.2f}".format(start_cost))
+def map_test():
+    data = list()
+    print("Map tester\nEnter x, y, towns: ", end='')
+    args = input().replace(',', ' ').split()
+    args = [int(args[i]) for i in range(3)]
+    timer_zero = time.time()
+    testing_map = my.create_map(args[0], args[1], args[2])
+    create_time = time.time() - timer_zero
+    print("Enter neighbourhood size: ", end='')
+    perm_count = input()
+    perm_count = int(perm_count)
+    timer_zero = time.time()
+    hill_result = my.hill_climbing(testing_map, perm_count)
+    hill_time = time.time() - timer_zero
+    print("Enter tabu list size: ", end='')
+    tabu_list_size = input()
+    tabu_list_size = int(tabu_list_size)
+    print("Enter tabu iteration limit (default 100): ", end='')
+    iterations = input()
+    iterations = 100 if iterations == "" else int(iterations)
+    timer_zero = time.time()
+    tabu_result = my.tabu_search(testing_map, perm_count, tabu_list_size, iterations)
+    tabu_time = time.time() - timer_zero
+    print("Enter initial temperature and alpha: ", end='')
+    sa_args = input().replace(',', ' ').split()
+    sa_args = [int(sa_args[0]), float(sa_args[1])]
+    timer_zero = time.time()
+    sa_result = my.simulated_annealing(testing_map, perm_count, sa_args[0], sa_args[1])
+    sa_time = time.time() - timer_zero
+    data.extend([testing_map, hill_result[1], tabu_result[1], sa_result[1]])
+    data.extend([my.distance_path(testing_map), hill_result[0], tabu_result[0], sa_result[0]])
+    data.extend([create_time, hill_time, tabu_time, sa_time])
+    save_map_graphs(data, args[0], args[1], args[2] + 1)
 
-start = time.time()
-hill_result = my.hill_climbing(start_map, 20)
-hill_end = time.time() - start
-print("\nHill sequence:", my.sequence(hill_result[1]), "\nHill cost:", "{:.2f}".format(hill_result[0]))
-print("End hill time:", hill_end)
 
-start = time.time()
-tabu_result = my.tabu_search(start_map, 20, 50, 500, 20)
-tabu_end = time.time() - start
-print("\nTabu sequence:", my.sequence(tabu_result[1]), "\nTabu cost:", "{:.2f}".format(tabu_result[0]))
-print("End tabu time:", tabu_end)
+def tabu_test():
+    print("Tabu tester\nlist - tabu list time test\niter - tabu iteration time test")
+    tabu_test_time_iterations(5, 500, 1, 5)
 
-start = time.time()
-sa_result = my.simulated_annealing(start_map, 20, 100, 0.1)
-sa_end = time.time() - start
-print("\nSA sequence:", my.sequence(sa_result[1]), "\nSA cost:", "{:.2f}".format(sa_result[0]))
-print("End SA time:", sa_end)
 
-plot_data.extend([start_map, hill_result[1], tabu_result[1], sa_result[1]])
-plot_data.extend([start_cost, hill_result[0], tabu_result[0], sa_result[0]])
+def tester():
+    while True:
+        print("\n\n\n\n")
+        print("Main tester\nhill - hill climbing testing\ntabu - tabu search testing\nsa - simulated annealing testing"
+              + "\nmap - print a map of all algorithms\nexit - exit program\nPlease select an option: ", end='')
+        option = input()
+        print("\n\n\n\n")
+        if option == "map":
+            map_test()
+        elif option == "hill":
+            pass
+        elif option == "tabu":
+            pass
+        elif option == "sa":
+            pass
+        elif option == "exit":
+            break
 
-save_map_graphs(plot_data, 200, 200, 21)
-tabu_test(1, 200, 1)
+
+tester()
